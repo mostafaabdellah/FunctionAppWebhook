@@ -14,7 +14,7 @@ namespace FunctionAppWebhook
     {
         [FunctionName("Notifications")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -25,8 +25,8 @@ namespace FunctionAppWebhook
                 StorageAccount storageAccount = StorageAccount.NewFromConnectionString(storageConnection);
                 var queueClient = storageAccount.CreateCloudQueueClient();
                 var queue = queueClient.GetQueueReference("webhooknotifications");
-                queue.CreateIfNotExistsAsync();
-                queue.AddMessageAsync(new Microsoft.Azure.Storage.Queue.CloudQueueMessage(requestBody));
+                queue.CreateIfNotExistsAsync().Wait();
+                queue.AddMessageAsync(new Microsoft.Azure.Storage.Queue.CloudQueueMessage(requestBody)).Wait();
 
             }
             catch (Exception exc)

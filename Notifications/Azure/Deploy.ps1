@@ -14,13 +14,10 @@ $outputs=New-AzResourceGroupDeployment `
 foreach ($key in $outputs.Outputs.keys) {
     if ($key -eq "functionAppName") {
         $functionAppName = $outputs.Outputs[$key].value
-        Write-Output 'functionAppName: ' $functionAppName
+        #Write-Output 'functionAppName: ' $functionAppName
     }elseif ($key -eq "storageAccountName") {
         $storageAccountName = $outputs.Outputs[$key].value
-        Write-Output 'storageAccountName: ' $storageAccountName
-    }elseif ($key -eq "StorageAccountKey") {
-        $storageAccountKey = $outputs.Outputs[$key].value
-        Write-Output 'storageAccountKey: ' $storageAccountKey
+        #Write-Output 'storageAccountName: ' $storageAccountName
     }
 }
 
@@ -32,6 +29,8 @@ Publish-AzWebapp -ResourceGroupName $resourceGroup `
 -Force
 
 $TriggerName = "Webhook"
+$QueueName='notifications'
+
 $FunctionApp = Get-AzWebApp -ResourceGroupName $resourceGroup -Name $functionAppName
 $Id = $FunctionApp.Id
 $DefaultHostName = $FunctionApp.DefaultHostName
@@ -40,18 +39,8 @@ $FunctionURL = "https://" + $DefaultHostName + "/api/" + $TriggerName + "?code="
 
 Write-Output $nl'Azure Function Url: ' $FunctionURL
 
-$StartTime = Get-Date
-$EndTime = $startTime.AddDays(700)
-$ctxKey = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageAccountKey
-$queueKey=New-AzStorageQueueSASToken -Name "xECM" -Permission raup -Context $ctxKey `
--ExpiryTime $EndTime
+Write-Output $nl 'Azure Storage Account: ' $storageAccountName
+#Write-Output $nl 'Azure Queue Name: ' $QueueName
+Write-Output $nl 'Azure Storage Access Key: '
 
-$QueueName='notifications'
-
-Write-Output $nl 'Azure Storage Account Name: ' $storageAccountName
-Write-Output $nl 'Azure Queue Name: ' $QueueName
-Write-Output $nl 'Azure Queue Key: ' $queueKey
-
-$QueueURL = "https://" + $storageAccountName + ".queue.core.windows.net/" + $QueueName + "/messages" + $queueKey
-Write-Output $nl 'Azure Queue Url: ' $QueueURL
-
+(Get-AzStorageAccountKey -ResourceGroupName $resourceGroup -AccountName $storageAccountName)| Where-Object {$_.KeyName -eq "key1"}

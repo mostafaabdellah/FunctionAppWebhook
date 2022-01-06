@@ -22,9 +22,10 @@ namespace FunctionAppWebhook
             {
                 var storageConnection = string.Empty;
                 storageConnection = System.Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process);
+                
                 StorageAccount storageAccount = StorageAccount.NewFromConnectionString(storageConnection);
                 var queueClient = storageAccount.CreateCloudQueueClient();
-                var queue = queueClient.GetQueueReference("webhooknotifications");
+                var queue = queueClient.GetQueueReference("notifications");
                 queue.CreateIfNotExistsAsync().Wait();
                 queue.AddMessageAsync(new Microsoft.Azure.Storage.Queue.CloudQueueMessage(requestBody)).Wait();
 

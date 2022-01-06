@@ -1,6 +1,6 @@
-#Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
-# Connect-AzAccount
-$resourceGroup='xECM2-WaySync08'
+#Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -AllowClobber -Force 
+Connect-AzAccount
+$resourceGroup='SharePointNotifications'
 
 New-AzResourceGroup  -Name $resourceGroup -Location canadaCentral
 
@@ -12,15 +12,18 @@ $outputs=New-AzResourceGroupDeployment `
 foreach ($key in $outputs.Outputs.keys) {
     if ($key -eq "functionAppName") {
         $functionAppName = $outputs.Outputs[$key].value
+        Write-Output 'functionAppName: ' $functionAppName
     }elseif ($key -eq "storageAccountName") {
         $storageAccountName = $outputs.Outputs[$key].value
+        Write-Output 'storageAccountName: ' $storageAccountName
     }elseif ($key -eq "StorageAccountKey") {
         $storageAccountKey = $outputs.Outputs[$key].value
+        Write-Output 'storageAccountKey: ' $storageAccountKey
     }
 }
 Publish-AzWebapp -ResourceGroupName $resourceGroup `
 -Name $functionAppName `
--ArchivePath 'C:\Users\Moustafa\source\repos\FunctionAppWebhook\FunctionAppWebhook\bin\Release\netcoreapp3.1\publish\publish.zip' `
+-ArchivePath 'C:\Users\mmoustafa\Source\Repos\mostafaabdellah\FunctionAppWebhook\FunctionAppWebhook\ARM\Package.zip' `
 -Force
 
 $TriggerName = "Notifications"
@@ -37,8 +40,14 @@ $EndTime = $startTime.AddDays(700)
 $ctxKey = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $storageAccountKey
 $queueKey=New-AzStorageQueueSASToken -Name "xECM" -Permission raup -Context $ctxKey `
 -ExpiryTime $EndTime
+$QueueName='webhooknotifications'
 
+Write-Output 'Azure Storage Account Name: ' $storageAccountName
+Write-Output 'Azure Queue Name: ' $QueueName
 Write-Output 'Azure Queue Key: ' $queueKey
+
+$QueueURL = "https://" + $storageAccountName + ".queue.core.windows.net/" + $QueueName + "/messages?" + $queueKey
+Write-Output 'Azure Queue Url: ' $QueueURL
 
 # $ctx = New-AzStorageContext -StorageAccountName $storageAccountName -UseConnectedAccount
 # New-AzStorageContainerSASToken -Context $ctx `
